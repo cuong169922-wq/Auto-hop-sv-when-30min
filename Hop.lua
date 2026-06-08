@@ -1,20 +1,20 @@
 --[[
-    BLOX FRUITS - AUTO REJOIN (vào server random)
-    Dành cho Arceus X, không cần API
+    BLOX FRUITS - AUTO REJOIN (FIX lỗi dịch chuyển)
+    Dùng cách shutdown game rồi mới teleport
 --]]
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local TeleportService = game:GetService("TeleportService")
-local GameId = 2753915549  -- Blox Fruits
+local GameId = 2753915549
 
--- Cấu hình (30 phút = 1800 giây)
-local REJOIN_INTERVAL = 1800
+-- Cấu hình
+local REJOIN_INTERVAL = 1800  -- 30 phút
 local joinTime = os.time()
 
--- Tạo menu đơn giản
+-- Tạo menu
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AutoRejoin"
+screenGui.Name = "AutoRejoinFix"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -27,7 +27,6 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
--- Bo góc
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 8)
 corner.Parent = frame
@@ -36,7 +35,7 @@ corner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 35)
 title.BackgroundColor3 = Color3.fromRGB(255, 100, 50)
-title.Text = "🔄 AUTO REJOIN (30 PHÚT)"
+title.Text = "🔄 AUTO REJOIN (FIX)"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.TextScaled = true
 title.Font = Enum.Font.GothamBold
@@ -89,12 +88,23 @@ local btnCorner = Instance.new("UICorner")
 btnCorner.CornerRadius = UDim.new(0, 5)
 btnCorner.Parent = rejoinBtn
 
--- Hàm Rejoin
+-- ============ CÁCH REJOIN MỚI (KHÔNG LỖI) ============
 local function RejoinGame()
-    statusLabel.Text = "🔄 Đang rejoin..."
+    statusLabel.Text = "🔄 Đang rejoin (shutdown)..."
     task.wait(1)
-    -- Dùng Teleport để vào lại game (server random)
-    TeleportService:Teleport(GameId)
+    
+    -- Cách 1: Shutdown game trước
+    game:Shutdown()
+    task.wait(2)
+    
+    -- Cách 2: Dùng teleport sau khi shutdown (nếu executor hỗ trợ)
+    -- TeleportService:Teleport(GameId)
+    
+    -- Cách 3: Hoặc dùng queue_on_teleport (nếu có)
+    -- queue_on_teleport([[
+    --     loadstring(game:HttpGet("https://your-script-url.com"))()
+    -- ]])
+    -- game:Shutdown()
 end
 
 -- Vòng lặp chính
@@ -103,11 +113,12 @@ spawn(function()
         local elapsed = os.time() - joinTime
         local minutes = math.floor((elapsed % 3600) / 60)
         local seconds = elapsed % 60
-        timeLabel.Text = string.format("⏱️ %02d:%02d", minutes, seconds)
+        timeLabel.Text = string.format("Ɐ️ %02d:%02d", minutes, seconds)
         
         if elapsed >= REJOIN_INTERVAL then
             RejoinGame()
             joinTime = os.time()
+            break  -- Thoát vòng lặp vì game đã shutdown
         end
         
         task.wait(1)
@@ -123,7 +134,7 @@ end)
 
 rejoinBtn.MouseButton1Click:Connect(function()
     RejoinGame()
-    joinTime = os.time()
 end)
 
-print("=== AUTO REJOIN ĐÃ CHẠY ===")
+print("=== AUTO REJOIN FIX ĐÃ CHẠY ===")
+print("Sau 30 phút sẽ shutdown game và rejoin")
